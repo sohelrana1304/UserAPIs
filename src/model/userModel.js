@@ -11,7 +11,9 @@ const userModel = new mongoose.Schema({
 
     password: { type: String, required: true},
 
-    isDeleted: { type: Boolean, default: false }
+    isDeleted: { type: Boolean, default: false },
+
+    deletedAt: { type: Date, default: null },
 
 }, { timestamps: true })
 

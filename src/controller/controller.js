@@ -9,6 +9,7 @@ const {
     isValidObjectId
 } = require("../validation/validator");
 const bcrypt = require("bcrypt");
+const SECRET_KEY = process.env.SECRET_KEY
 
 const createUser = async function (req, res) {
     try {
@@ -30,10 +31,19 @@ const createUser = async function (req, res) {
                 });
         }
 
+        const Pattern = /^[a-zA-Z ]*$/;
+        if (!(Pattern.test(firstName))) {
+            return res.status(400).send({ status: false, msg: "Not a valid format for firstName" })
+        }
+
         if (!isValid(lastName)) {
             return res
                 .status(400)
                 .send({ status: false, message: "Last name is required or not valid" });
+        }
+
+        if (!(Pattern.test(lastName))) {
+            return res.status(400).send({ status: false, msg: "Not a valid lastName" })
         }
 
         if (!isValid(email)) {
@@ -151,7 +161,7 @@ const loginUser = async (req, res) => {
 
         const token = jwt.sign({
             userID: getUserData._id,
-        }, "userLogin", { expiresIn: '30d' })
+        }, SECRET_KEY, { expiresIn: '30d' })
 
         const option = {
             from: '"Sohel Rana" test@confettisocial.com', // sender address
@@ -186,26 +196,175 @@ const loginUser = async (req, res) => {
 }
 
 
-// To fetch a user's details
-const fetchUser = async (req, res) => {
+// To update an User
+const updateUser = async (req, res) => {
     try {
-        let userId = req.params.userId
+        const body = req.body
 
-        if (!isValidObjectId(userId)) return res.status(400).send({ status: false, message: "userId is not valid" });
+        // Validate params
+        const userId = req.params.userId
+        console.log(userId)
 
-        let checkData = await userModel.findById({ _id: userId });
-        if (!checkData) return res.status(404).send({ status: false, msg: "There is no user exist with this id" });
+        if (!isValidObjectId(userId)) {
+            return res.status(400).send({ status: false, msg: "User Id is invalid" })
+        }
 
-        // let tokenId = req.userId
-        // if (!(userId == tokenId)) return res.status(401).send({ status: false, message: `Unauthorized access! Owner info doesn't match` });
+        const userFound = await userModel.findOne({ _id: userId })
+        if (!userFound) {
+            return res.status(404).send({ status: false, msg: "User does not exist" })
+        }
 
-        return res.status(200).send({ status: true, message: 'User profile details', data: checkData });
+        // AUTHORISATION
+        const tokenId = req.userId
+        console.log("Token Id",tokenId)
+        if (!(userId == tokenId)) {
+            return res.status(401).send({ status: false, message: "Unauthorized access! Owner info doesn't match" })
+        };
+
+        // Destructuring
+        const { firstName, lastName, email, password } = body;
+
+        const updatedData = {}
+
+        if (firstName) {
+            if (!isValid(firstName)) {
+                return res.status(400).send({ status: false, msg: "First Name is not valid" })
+            }
+            const Pattern = /^[a-zA-Z ]*$/;
+            if (!(Pattern.test(firstName))) {
+                return res.status(400).send({ status: false, msg: "Not a valid format for firstName" })
+            }
+            updatedData['firstName'] = firstName
+        }
+
+        if (lastName) {
+            if (!isValid(lastName)) {
+                return resstatus(400).send({ status: false, msg: "not valid lastName" })
+            }
+            const Pattern = /^[a-zA-Z ]*$/;
+            if (!(Pattern.test(lastName))) {
+                return res.status(400).send({ status: false, msg: "Not a valid lastName" })
+            }
+            updatedData['lastName'] = lastName
+        }
+
+        // Updating of email
+        if (isValid(email)) {
+            if (!isValidEmail(email)) {
+                return res.status(400).send({ status: false, msg: "Invalid email id" })
+            }
+            // Duplicate email
+            const duplicatemail = await userModel.find({ email: email })
+            if (duplicatemail.length) {
+                return res.status(400).send({ status: false, msg: "Email id is already exist" })
+            }
+            updatedData['email'] = email
+        }
+
+        // Updating of password
+        if (password) {
+            if (!isValid(password)) {
+                return res.status(400).send({ status: false, message: 'password is required' })
+            }
+            if (!isValidPassword(password)) {
+                return res.status(400).send({ status: false, message: "Password should be Valid min 8 character and max 15 " })
+            }
+            const encrypt = await bcrypt.hash(password, 10)
+            updatedData['password'] = encrypt
+        }
+
+        if (!isValidRequestBody(updatedData)) {
+            return res.status(400).send({ status: false, msg: "Input some data to update user" })
+        }
+
+        const updated = await userModel.findOneAndUpdate({ _id: userId }, updatedData, { new: true })
+
+        const option = {
+            from: '"Sohel Rana" test@confettisocial.com', // sender address
+            to: userFound.email, // list of receivers
+            subject: "Account details update", // Subject line
+            text: "Your account details has been updated successfully", // plain text body
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: process.env.HOST,
+            port: process.env.SMTP_PORT,
+            secure: true,
+            auth: {
+                user: process.env.SENDER_EMAIL,
+                pass: process.env.SENDER_EMAIL_PASSWORD
+            }
+        })
+        const info = transporter.sendMail(option, (err, success) => {
+            if (err) {
+                console.log("Error", err)
+            } else {
+                console.log("Email sent")
+            }
+        })
+
+        return res.status(201).send({ status: true, message: "User updated successfully", data: updated })
+
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({ message: err.message });
+    };
+}
+
+// To remove an User
+const removeUser = async function (req, res) {
+    try {
+        const userId = req.params.userId
+
+        if (!isValidObjectId(userId)) {
+            return res.status(404).send({ status: false, message: "User id is not valid" })
+        }
+        
+        // AUTHORISATION
+        const tokenId = req.userId
+        if (!(userId == tokenId)) {
+            return res.status(401).send({ status: false, message: "Unauthorized access! Owner info doesn't match" })
+        };
+        
+        const removeUser = await userModel.findOneAndUpdate({ _id: userId, isDeleted: false },
+            { $set: { isDeleted: true, deletedAt: new Date() } })
+
+        if (removeUser == null) {
+            return res.status(404).send({ status: false, message: "User is already removed or not exist" })
+        }
+
+        const option = {
+            from: '"Sohel Rana" test@confettisocial.com', // sender address
+            to: removeUser.email, // list of receivers
+            subject: "Account Deletation", // Subject line
+            text: "Your account has been removed successfully", // plain text body
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: process.env.HOST,
+            port: process.env.SMTP_PORT,
+            secure: true,
+            auth: {
+                user: process.env.SENDER_EMAIL,
+                pass: process.env.SENDER_EMAIL_PASSWORD
+            }
+        })
+        const info = transporter.sendMail(option, (err, success) => {
+            if (err) {
+                console.log("Error", err)
+            } else {
+                console.log("Email sent")
+            }
+        })
+
+        return res.status(200).send({ status: true, message: "User has been removed successfully" })
+
     }
     catch (err) {
-        //console.log(err)
-        return res.status(500).send({ status: false, msg: err.message });
+        console.log("This is the error :", err.message)
+        res.status(500).send({ msg: "Error", error: err.message })
     }
 }
 
 
-module.exports = { createUser, loginUser, fetchUser }
+module.exports = { createUser, loginUser, updateUser, removeUser}
