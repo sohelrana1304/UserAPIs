@@ -185,7 +185,7 @@ const loginUser = async (req, res) => {
         userID: getUserData._id,
       },
       SECRET_KEY,
-      { expiresIn: "30d" }
+      { expiresIn: "30s" }
     );
 
     // Configuration for send email after successfull login by a User.
