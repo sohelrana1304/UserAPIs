@@ -97,7 +97,7 @@ const createUser = async function (req, res) {
 
     // Configuration for send email after creating new User.
     const option = {
-      from: '"Sohel Rana" sohel.cyberspace@gmail.com', // sender address
+      from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Account creation", // Subject line
       text: "Your account has been created successfully", // plain text body
@@ -201,7 +201,7 @@ const loginUser = async (req, res) => {
 
     // Configuration for send email after successfull login by a User.
     const option = {
-      from: '"Sohel Rana" sohel.cyberspace@gmail.com', // sender address
+      from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Login Alert", // Subject line
       text: "You are successfully loggedin", // plain text body
@@ -358,7 +358,7 @@ const updateUser = async (req, res) => {
 
     // Configuration for send email after updating a new User
     const option = {
-      from: '"Sohel Rana" sohel.cyberspace@gmail.com', // sender address
+      from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Account details update", // Subject line
       text: "Your account details has been updated successfully", // plain text body
