@@ -1,4 +1,4 @@
-const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../model/userModel");
 const {
@@ -8,9 +8,8 @@ const {
   isValidPassword,
   isValidObjectId,
 } = require("../validation/validator");
-const bcrypt = require("bcrypt");
+const { transporter } = require("./emailConfig");
 const SECRET_KEY = process.env.SECRET_KEY;
-
 
 // To add a new User in Database
 const createUser = async function (req, res) {
@@ -96,28 +95,24 @@ const createUser = async function (req, res) {
     const createUser = await userModel.create(data);
 
     // Configuration for send email after creating new User.
+    // Email template
     const option = {
       from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Account creation", // Subject line
       text: "Your account has been created successfully", // plain text body
     };
-    const transporter = nodemailer.createTransport({
-      host: process.env.HOST,
-      port: process.env.SMTP_PORT,
-      secure: true,
-      auth: {
-        user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_EMAIL_PASSWORD,
-      },
-    });
-    const info = transporter.sendMail(option, (err, success) => {
-      if (err) {
-        console.log("Error", err);
-      } else {
-        console.log("Email sent");
-      }
-    });
+
+    if (createUser) {
+      // Sending email
+      const info = transporter.sendMail(option, (err, success) => {
+        if (err) {
+          console.log("Error", err);
+        } else {
+          console.log("Email sent");
+        }
+      });
+    }
 
     // Sending response
     return res
@@ -129,8 +124,6 @@ const createUser = async function (req, res) {
   }
 };
 
-
-
 // For log in
 const loginUser = async (req, res) => {
   try {
@@ -140,12 +133,10 @@ const loginUser = async (req, res) => {
 
     // Checking request body empty or not
     if (Object.keys(data).length == 0) {
-      return res
-        .status(400)
-        .send({
-          status: false,
-          msg: "Email and password is required to login",
-        });
+      return res.status(400).send({
+        status: false,
+        msg: "Email and password is required to login",
+      });
     }
 
     // Email validating
@@ -167,13 +158,11 @@ const loginUser = async (req, res) => {
         .send({ status: false, message: "Password is required or not valid" });
     }
     if (!isValidPassword(password)) {
-      return res
-        .status(400)
-        .send({
-          status: false,
-          message:
-            "Password length should be 8 to 15 digits and enter atleast one uppercase or lowercase",
-        });
+      return res.status(400).send({
+        status: false,
+        message:
+          "Password length should be 8 to 15 digits and enter atleast one uppercase or lowercase",
+      });
     }
 
     // Checking email from database to check it is existed or not.
@@ -200,37 +189,30 @@ const loginUser = async (req, res) => {
     );
 
     // Configuration for send email after successfull login by a User.
+    // Email template
     const option = {
       from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Login Alert", // Subject line
       text: "You are successfully loggedin", // plain text body
     };
-    const transporter = nodemailer.createTransport({
-      host: process.env.HOST,
-      port: process.env.SMTP_PORT,
-      secure: true,
-      auth: {
-        user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_EMAIL_PASSWORD,
-      },
-    });
-    const info = transporter.sendMail(option, (err, success) => {
-      if (err) {
-        console.log("Error", err);
-      } else {
-        console.log("Email sent");
-      }
-    });
+    if (getUserData && ps && token) {
+      // Sending email
+      const info = transporter.sendMail(option, (err, success) => {
+        if (err) {
+          console.log("Error", err);
+        } else {
+          console.log("Email sent");
+        }
+      });
+    }
 
     // Sending response data
-    res
-      .status(200)
-      .send({
-        status: true,
-        message: "User Login succesfully",
-        data: { userId: getUserData._id, token: token },
-      });
+    return res.status(200).send({
+      status: true,
+      message: "User Login succesfully",
+      data: { userId: getUserData._id, token: token },
+    });
   } catch (err) {
     res.status(500).send({ status: true, Error: err.message });
   }
@@ -261,12 +243,10 @@ const updateUser = async (req, res) => {
     // Authorization
     const tokenId = req.userId;
     if (!(userId == tokenId)) {
-      return res
-        .status(401)
-        .send({
-          status: false,
-          message: "Unauthorized access! Owner info doesn't match",
-        });
+      return res.status(401).send({
+        status: false,
+        message: "Unauthorized access! Owner info doesn't match",
+      });
     }
 
     // Destructuring
@@ -330,12 +310,10 @@ const updateUser = async (req, res) => {
           .send({ status: false, message: "password is required" });
       }
       if (!isValidPassword(password)) {
-        return res
-          .status(400)
-          .send({
-            status: false,
-            message: "Password should be Valid min 8 character and max 15 ",
-          });
+        return res.status(400).send({
+          status: false,
+          message: "Password should be Valid min 8 character and max 15 ",
+        });
       }
       // Encrypting password
       const encrypt = await bcrypt.hash(password, 10);
@@ -357,44 +335,35 @@ const updateUser = async (req, res) => {
     );
 
     // Configuration for send email after updating a new User
+    // Email template
     const option = {
       from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Account details update", // Subject line
       text: "Your account details has been updated successfully", // plain text body
     };
-    const transporter = nodemailer.createTransport({
-      host: process.env.HOST,
-      port: process.env.SMTP_PORT,
-      secure: true,
-      auth: {
-        user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_EMAIL_PASSWORD,
-      },
-    });
-    const info = transporter.sendMail(option, (err, success) => {
-      if (err) {
-        console.log("Error", err);
-      } else {
-        console.log("Email sent");
-      }
-    });
+    if (updated) {
+      // Sending email
+      const info = transporter.sendMail(option, (err, success) => {
+        if (err) {
+          console.log("Error", err);
+        } else {
+          console.log("Email sent");
+        }
+      });
+    }
 
     // Sending response
-    return res
-      .status(201)
-      .send({
-        status: true,
-        message: "User updated successfully",
-        data: updated,
-      });
+    return res.status(201).send({
+      status: true,
+      message: "User updated successfully",
+      data: updated,
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).send({ message: err.message });
   }
 };
-
-
 
 // To remove an User
 const removeUser = async function (req, res) {
@@ -411,12 +380,10 @@ const removeUser = async function (req, res) {
     // Authorization
     const tokenId = req.userId;
     if (!(userId == tokenId)) {
-      return res
-        .status(401)
-        .send({
-          status: false,
-          message: "Unauthorized access! Owner info doesn't match",
-        });
+      return res.status(401).send({
+        status: false,
+        message: "Unauthorized access! Owner info doesn't match",
+      });
     }
 
     // Removing an user from Database
@@ -426,42 +393,36 @@ const removeUser = async function (req, res) {
     );
 
     if (removeUser == null) {
-      return res
-        .status(404)
-        .send({
-          status: false,
-          message: "User is already removed or not exist",
-        });
+      return res.status(404).send({
+        status: false,
+        message: "User is already removed or not exist",
+      });
     }
 
     // Configuration for send email after removing a User.
+    // Email template
     const option = {
-      from: '"Sohel Rana" test@confettisocial.com', // sender address
+      from: process.env.FROM, // sender address
       to: removeUser.email, // list of receivers
       subject: "Account Deletation", // Subject line
       text: "Your account has been removed successfully", // plain text body
     };
-    const transporter = nodemailer.createTransport({
-      host: process.env.HOST,
-      port: process.env.SMTP_PORT,
-      secure: true,
-      auth: {
-        user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_EMAIL_PASSWORD,
-      },
-    });
-    const info = transporter.sendMail(option, (err, success) => {
-      if (err) {
-        console.log("Error", err);
-      } else {
-        console.log("Email sent");
-      }
-    });
+    if (removeUser) {
+        // Sending email
+      const info = transporter.sendMail(option, (err, success) => {
+        if (err) {
+          console.log("Error", err);
+        } else {
+          console.log("Email sent");
+        }
+      });
+    }
 
     // Sending response
     return res
       .status(200)
       .send({ status: true, message: "User has been removed successfully" });
+      
   } catch (err) {
     console.log("This is the error :", err.message);
     res.status(500).send({ msg: "Error", error: err.message });
