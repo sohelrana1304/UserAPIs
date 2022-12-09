@@ -25,7 +25,8 @@ const createUser = async function (req, res) {
         .send({ status: false, msg: "please provide  details" });
     }
 
-    const Pattern = /^[a-zA-Z ]*$/;
+    // Regex for taking input only Character
+    const Pattern = /^[a-zA-Z]*$/;
 
     // First name validation
     if (!isValid(firstName)) {
@@ -185,7 +186,7 @@ const loginUser = async (req, res) => {
         userID: getUserData._id,
       },
       SECRET_KEY,
-      { expiresIn: "30s" }
+      { expiresIn: "30d" }
     );
 
     // Configuration for send email after successfull login by a User.
@@ -254,35 +255,24 @@ const updateUser = async (req, res) => {
 
     const updatedData = {};
 
+    const Pattern = /^[a-zA-Z]*$/;
+
     // Updating First name according to User Input
     if (firstName) {
-      if (!isValid(firstName)) {
-        return res
-          .status(400)
-          .send({ status: false, msg: "First Name is not valid" });
-      }
-      const Pattern = /^[a-zA-Z ]*$/;
       if (!Pattern.test(firstName)) {
         return res
           .status(400)
-          .send({ status: false, msg: "Not a valid format for firstName" });
+          .send({ status: false, msg: "Not a valid format for First Name" });
       }
       updatedData["firstName"] = firstName;
     }
 
     // Updating Last name according to User Input
     if (lastName) {
-      if (!isValid(lastName)) {
-        return resstatus(400).send({
-          status: false,
-          msg: "not valid lastName",
-        });
-      }
-      const Pattern = /^[a-zA-Z ]*$/;
       if (!Pattern.test(lastName)) {
         return res
           .status(400)
-          .send({ status: false, msg: "Not a valid lastName" });
+          .send({ status: false, msg: "Not a valid Last Name" });
       }
       updatedData["lastName"] = lastName;
     }
@@ -304,11 +294,6 @@ const updateUser = async (req, res) => {
 
     // Updating password according to User Input
     if (password) {
-      if (!isValid(password)) {
-        return res
-          .status(400)
-          .send({ status: false, message: "password is required" });
-      }
       if (!isValidPassword(password)) {
         return res.status(400).send({
           status: false,
@@ -408,7 +393,7 @@ const removeUser = async function (req, res) {
       text: "Your account has been removed successfully", // plain text body
     };
     if (removeUser) {
-        // Sending email
+      // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
           console.log("Error", err);
@@ -422,7 +407,6 @@ const removeUser = async function (req, res) {
     return res
       .status(200)
       .send({ status: true, message: "User has been removed successfully" });
-      
   } catch (err) {
     console.log("This is the error :", err.message);
     res.status(500).send({ msg: "Error", error: err.message });
