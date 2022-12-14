@@ -8,7 +8,7 @@ app.use(express.json());
 
 // Connecting with MongoDB Database
 mongoose
-  .connect(process.env.MONGODB_URL, { useNewUrlParser: true })
+  .connect(process.env.MONGODB_URL, { useNewUrlParser: true})
   .then(() => console.log("MongoDB is connected."))
   .catch((err) => console.log(err));
 

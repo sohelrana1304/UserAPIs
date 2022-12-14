@@ -83,7 +83,7 @@ const createUser = async function (req, res) {
       return res.status(400).send({
         status: false,
         message:
-          "Password length should be 8 to 15 digits and enter atleast one uppercase or lowercase",
+          "Password length should be atleast 8 digits and enter atleast one uppercase, one lowercase and one special character",
       });
     }
 

@@ -20,7 +20,7 @@ const isValidObjectId = function (objectId) {
 
 // Email id validation
 const isValidEmail = function (value) {
-  let mailFormat = /^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/;
+  const mailFormat = /^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/;
   // Checking if the inputted email id perfectely formatted or not
   if (!value.match(mailFormat)) return false;
   return true;
@@ -29,10 +29,12 @@ const isValidEmail = function (value) {
 
 // Password validation
 const isValidPassword = function (value) {
-  let passwordPattern = /^[a-zA-Z0-9!@#$%&*]{8,15}$/;
-  if (!passwordPattern.test(value)) return false;
+  const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/;
+  if (!value.match(passwordPattern)) return false;
   return true;
 };
+
+
 
 
 // Exporting functions
