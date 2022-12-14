@@ -108,7 +108,7 @@ const createUser = async function (req, res) {
       // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
-          console.log("Error", err);
+          console.log("Error :", err.message);
         } else {
           console.log("Email sent");
         }
@@ -201,7 +201,7 @@ const loginUser = async (req, res) => {
       // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
-          console.log("Error", err);
+          console.log("Error", err.message);
         } else {
           console.log("Email sent");
         }
@@ -331,7 +331,7 @@ const updateUser = async (req, res) => {
       // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
-          console.log("Error", err);
+          console.log("Error", err.message);
         } else {
           console.log("Email sent");
         }
@@ -396,7 +396,7 @@ const removeUser = async function (req, res) {
       // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
-          console.log("Error", err);
+          console.log("Error", err.message);
         } else {
           console.log("Email sent");
         }
