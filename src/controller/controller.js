@@ -22,7 +22,7 @@ const createUser = async function (req, res) {
     if (!isValidRequestBody(data)) {
       return res
         .status(400)
-        .send({ status: false, msg: "please provide  details" });
+        .send({ status: false, msg: "Please provide details to register yourself." });
     }
 
     // Regex for taking input only Character
@@ -32,37 +32,37 @@ const createUser = async function (req, res) {
     if (!isValid(firstName)) {
       return res.status(400).send({
         status: false,
-        message: "First name is required or not valid",
+        message: "First name is required.",
       });
     }
     if (!Pattern.test(firstName)) {
       return res
         .status(400)
-        .send({ status: false, msg: "Not a valid format for firstName" });
+        .send({ status: false, msg: "First name is not valid." });
     }
 
     // Last name validation
     if (!isValid(lastName)) {
       return res
         .status(400)
-        .send({ status: false, message: "Last name is required or not valid" });
+        .send({ status: false, message: "Last name is required." });
     }
     if (!Pattern.test(lastName)) {
       return res
         .status(400)
-        .send({ status: false, msg: "Not a valid lastName" });
+        .send({ status: false, msg: "Last name is not valid." });
     }
 
     // Email validation
     if (!isValid(email)) {
       return res
         .status(400)
-        .send({ status: false, message: "Email is required or not valid" });
+        .send({ status: false, message: "Email id is required." });
     }
     if (!isValidEmail(email)) {
       return res
         .status(400)
-        .send({ status: false, message: "Email is not valid" });
+        .send({ status: false, message: "Email id is not valid." });
     }
 
     // Checking email from database for uniqueness
@@ -70,20 +70,20 @@ const createUser = async function (req, res) {
     if (checkEmail) {
       return res
         .status(400)
-        .send({ status: false, msg: "Email is already exist" });
+        .send({ status: false, msg: "Email id is already registered." });
     }
 
     // Password validation
     if (!isValid(password)) {
       return res
         .status(400)
-        .send({ status: false, message: "Password is required or not valid" });
+        .send({ status: false, message: "Password is required." });
     }
     if (!isValidPassword(password)) {
       return res.status(400).send({
         status: false,
         message:
-          "Password length should be atleast 8 digits and enter atleast one uppercase, one lowercase and one special character",
+          "Password length should be atleast 8 digits and enter atleast one uppercase, one lowercase and one special character.",
       });
     }
 
@@ -101,7 +101,7 @@ const createUser = async function (req, res) {
       from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Account creation", // Subject line
-      text: "Your account has been created successfully", // plain text body
+      text: "Your account has been created successfully.", // plain text body
     };
 
     if (createUser) {
@@ -120,7 +120,7 @@ const createUser = async function (req, res) {
       .status(201)
       .send({ status: true, message: "User created successfully", createUser });
   } catch (err) {
-    console.log("This is the error :", err.message);
+    console.log("Error :", err.message);
     res.status(500).send({ msg: "Error", error: err.message });
   }
 };
@@ -144,25 +144,25 @@ const loginUser = async (req, res) => {
     if (!isValid(email)) {
       return res
         .status(400)
-        .send({ status: false, message: "Email is required or not valid" });
+        .send({ status: false, message: "Email id is required." });
     }
     if (!isValidEmail(email)) {
       return res
         .status(400)
-        .send({ status: false, message: "Email is not valid" });
+        .send({ status: false, message: "Email id is not valid." });
     }
 
     // Password validating
     if (!isValid(password)) {
       return res
         .status(400)
-        .send({ status: false, message: "Password is required or not valid" });
+        .send({ status: false, message: "Password is required." });
     }
     if (!isValidPassword(password)) {
       return res.status(400).send({
         status: false,
         message:
-          "Password length should be 8 to 15 digits and enter atleast one uppercase or lowercase",
+          "Password length should be atleast 8 digits and enter atleast one uppercase, one lowercase and one special character",
       });
     }
 
@@ -171,13 +171,13 @@ const loginUser = async (req, res) => {
     if (!getUserData) {
       return res
         .status(401)
-        .send({ status: false, msg: "Invalid credentials" });
+        .send({ status: false, msg: "Invalid credentials." });
     }
 
     // Decrypting a password
     const ps = bcrypt.compareSync(password, getUserData.password);
     if (ps == false) {
-      return res.status(401).send({ status: false, msg: "Password is wrong" });
+      return res.status(401).send({ status: false, msg: "Invalid credentials." });
     }
 
     // Generating a JWT token
@@ -186,7 +186,7 @@ const loginUser = async (req, res) => {
         userID: getUserData._id,
       },
       SECRET_KEY,
-      { expiresIn: "30d" }
+      { expiresIn: "2d" }
     );
 
     // Configuration for send email after successfull login by a User.
@@ -195,13 +195,13 @@ const loginUser = async (req, res) => {
       from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Login Alert", // Subject line
-      text: "You are successfully loggedin", // plain text body
+      text: "You are successfully loggedin.", // plain text body
     };
     if (getUserData && ps && token) {
       // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
-          console.log("Error", err.message);
+          console.log("Error :", err.message);
         } else {
           console.log("Email sent");
         }
@@ -215,6 +215,7 @@ const loginUser = async (req, res) => {
       data: { userId: getUserData._id, token: token },
     });
   } catch (err) {
+    console.log("Error :", err.message);
     res.status(500).send({ status: true, Error: err.message });
   }
 };
@@ -230,7 +231,7 @@ const updateUser = async (req, res) => {
 
     // Validate user id from params
     if (!isValidObjectId(userId)) {
-      return res.status(400).send({ status: false, msg: "User Id is invalid" });
+      return res.status(400).send({ status: false, msg: "User Id is invalid." });
     }
 
     // Checking email from database to check it is exist or not
@@ -238,7 +239,7 @@ const updateUser = async (req, res) => {
     if (!userFound) {
       return res
         .status(404)
-        .send({ status: false, msg: "User does not exist" });
+        .send({ status: false, msg: "User does not exist." });
     }
 
     // Authorization
@@ -246,7 +247,7 @@ const updateUser = async (req, res) => {
     if (!(userId == tokenId)) {
       return res.status(401).send({
         status: false,
-        message: "Unauthorized access! Owner info doesn't match",
+        message: "Unauthorized access! Owner info doesn't match.",
       });
     }
 
@@ -262,7 +263,7 @@ const updateUser = async (req, res) => {
       if (!Pattern.test(firstName)) {
         return res
           .status(400)
-          .send({ status: false, msg: "Not a valid format for First Name" });
+          .send({ status: false, msg: "First Name is not valid." });
       }
       updatedData["firstName"] = firstName;
     }
@@ -272,7 +273,7 @@ const updateUser = async (req, res) => {
       if (!Pattern.test(lastName)) {
         return res
           .status(400)
-          .send({ status: false, msg: "Not a valid Last Name" });
+          .send({ status: false, msg: "Last Name is not valid." });
       }
       updatedData["lastName"] = lastName;
     }
@@ -280,14 +281,14 @@ const updateUser = async (req, res) => {
     // Updating email according to User Input
     if (isValid(email)) {
       if (!isValidEmail(email)) {
-        return res.status(400).send({ status: false, msg: "Invalid email id" });
+        return res.status(400).send({ status: false, msg: "Invalid email id." });
       }
       // Duplicate email
       const duplicatemail = await userModel.find({ email: email });
       if (duplicatemail.length) {
         return res
           .status(400)
-          .send({ status: false, msg: "Email id is already exist" });
+          .send({ status: false, msg: "Email id is already registered." });
       }
       updatedData["email"] = email;
     }
@@ -297,7 +298,7 @@ const updateUser = async (req, res) => {
       if (!isValidPassword(password)) {
         return res.status(400).send({
           status: false,
-          message: "Password should be Valid min 8 character and max 15 ",
+          message: "Password length should be atleast 8 digits and enter atleast one uppercase, one lowercase and one special character.",
         });
       }
       // Encrypting password
@@ -309,14 +310,12 @@ const updateUser = async (req, res) => {
     if (!isValidRequestBody(updatedData)) {
       return res
         .status(400)
-        .send({ status: false, msg: "Input some data to update user" });
+        .send({ status: false, msg: "Input some data to update your profile." });
     }
 
     // After validating all the input new data will be updated in Database
     const updated = await userModel.findOneAndUpdate(
-      { _id: userId },
-      updatedData,
-      { new: true }
+      { _id: userId }, updatedData, { new: true }
     );
 
     // Configuration for send email after updating a new User
@@ -325,13 +324,13 @@ const updateUser = async (req, res) => {
       from: process.env.FROM, // sender address
       to: email, // list of receivers
       subject: "Account details update", // Subject line
-      text: "Your account details has been updated successfully", // plain text body
+      text: "Your account details has been updated successfully.", // plain text body
     };
     if (updated) {
       // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
-          console.log("Error", err.message);
+          console.log("Error :", err.message);
         } else {
           console.log("Email sent");
         }
@@ -345,7 +344,7 @@ const updateUser = async (req, res) => {
       data: updated,
     });
   } catch (err) {
-    console.log(err);
+    console.log("Error :", err.message);
     return res.status(500).send({ message: err.message });
   }
 };
@@ -359,7 +358,7 @@ const removeUser = async function (req, res) {
     if (!isValidObjectId(userId)) {
       return res
         .status(404)
-        .send({ status: false, message: "User id is not valid" });
+        .send({ status: false, message: "User id is not valid." });
     }
 
     // Authorization
@@ -367,7 +366,7 @@ const removeUser = async function (req, res) {
     if (!(userId == tokenId)) {
       return res.status(401).send({
         status: false,
-        message: "Unauthorized access! Owner info doesn't match",
+        message: "Unauthorized access! Owner info doesn't match.",
       });
     }
 
@@ -380,7 +379,7 @@ const removeUser = async function (req, res) {
     if (removeUser == null) {
       return res.status(404).send({
         status: false,
-        message: "User is already removed or not exist",
+        message: "User is already removed or not exist.",
       });
     }
 
@@ -390,13 +389,13 @@ const removeUser = async function (req, res) {
       from: process.env.FROM, // sender address
       to: removeUser.email, // list of receivers
       subject: "Account Deletation", // Subject line
-      text: "Your account has been removed successfully", // plain text body
+      text: "Your account has been removed successfully.", // plain text body
     };
     if (removeUser) {
       // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
-          console.log("Error", err.message);
+          console.log("Error :", err.message);
         } else {
           console.log("Email sent");
         }
@@ -406,9 +405,9 @@ const removeUser = async function (req, res) {
     // Sending response
     return res
       .status(200)
-      .send({ status: true, message: "User has been removed successfully" });
+      .send({ status: true, message: "User has been removed successfully." });
   } catch (err) {
-    console.log("This is the error :", err.message);
+    console.log("Error :", err.message);
     res.status(500).send({ msg: "Error", error: err.message });
   }
 };

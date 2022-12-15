@@ -7,10 +7,10 @@ const { userAuth } = require('../middleware/auth');
 router.post("/SignUp", createUser);
 
 // For log in
-router.get("/logIn", loginUser)
+router.post("/logIn", loginUser)
 
 // For update User's information
-router.put("/user/:userId/profile", userAuth, updateUser)
+router.patch("/user/:userId/profile", userAuth, updateUser)
 
 // To remove User
 router.delete("/user/:userId", userAuth, removeUser)

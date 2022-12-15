@@ -5,22 +5,29 @@ const SECRET_KEY = process.env.SECRET_KEY;
 const userAuth = async function (req, res, next) {
   try {
     // Taking token from header
-    const token = req.header("x-api-key");
-
+    const authHeader = req.headers["authorization"];
+    
     // If token is not present then is response message will displayed.
-    if (token == undefined) {
+    if (authHeader == undefined) {
       return res
-        .status(403)
+        .status(401)
         .send({
           status: false,
-          message: "Missing authentication token in request",
+          message: "User is Unauthorized",
         });
     }
+
+    const bearerToken = authHeader.split(" ")
+    const token = bearerToken[1]
 
     // Varifing token
     const verifyToken = jwt.verify(token, SECRET_KEY, (err, decode) => {
       if (err) {
-        return res.status(500).send({ msg: err });
+        if(err.name  === "JsonWebTokenError"){
+          return res.status(401).send({ msg: "User is Unauthorized" });
+        }else{
+          return res.status(401).send({ msg: err.message });
+        }
       } else {
         req.userId = decode.userID;
         next();
