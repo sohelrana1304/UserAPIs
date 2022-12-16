@@ -29,37 +29,21 @@ const createUser = async function (req, res) {
     const Pattern = /^[a-zA-Z]*$/;
 
     // First name validation
-    if (!isValid(firstName)) {
-      return res.status(400).send({
-        status: false,
-        message: "First name is required.",
-      });
-    }
-    if (!Pattern.test(firstName)) {
+    if ((!isValid(firstName)) || (!Pattern.test(firstName))) {
       return res
         .status(400)
         .send({ status: false, msg: "First name is not valid." });
     }
 
     // Last name validation
-    if (!isValid(lastName)) {
+    if ((!isValid(lastName)) || (!Pattern.test(lastName))) {
       return res
         .status(400)
-        .send({ status: false, message: "Last name is required." });
-    }
-    if (!Pattern.test(lastName)) {
-      return res
-        .status(400)
-        .send({ status: false, msg: "Last name is not valid." });
+        .send({ status: false, message: "Last name is not valid." });
     }
 
     // Email validation
-    if (!isValid(email)) {
-      return res
-        .status(400)
-        .send({ status: false, message: "Email id is required." });
-    }
-    if (!isValidEmail(email)) {
+    if ( (!isValid(email)) || (!isValidEmail(email))) {
       return res
         .status(400)
         .send({ status: false, message: "Email id is not valid." });
@@ -74,12 +58,7 @@ const createUser = async function (req, res) {
     }
 
     // Password validation
-    if (!isValid(password)) {
-      return res
-        .status(400)
-        .send({ status: false, message: "Password is required." });
-    }
-    if (!isValidPassword(password)) {
+    if ((!isValid(password)) || (!isValidPassword(password))) {
       return res.status(400).send({
         status: false,
         message:
@@ -87,10 +66,9 @@ const createUser = async function (req, res) {
       });
     }
 
-    // Encrypting passwaord
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(password, saltRounds);
-    data.password = hash;
+    // Hashing passwaord
+    const hashPassword = await bcrypt.hash(password, 10);
+    data.password = hashPassword;
 
     // Adding a new user in Database
     const createUser = await userModel.create(data);
@@ -133,7 +111,7 @@ const loginUser = async (req, res) => {
     const { email, password } = data;
 
     // Checking request body empty or not
-    if (Object.keys(data).length == 0) {
+    if (!isValidRequestBody(data)) {
       return res.status(400).send({
         status: false,
         msg: "Email and password is required to login",
@@ -141,12 +119,7 @@ const loginUser = async (req, res) => {
     }
 
     // Email validating
-    if (!isValid(email)) {
-      return res
-        .status(400)
-        .send({ status: false, message: "Email id is required." });
-    }
-    if (!isValidEmail(email)) {
+    if ((!isValid(email)) || (!isValidEmail(email))) {
       return res
         .status(400)
         .send({ status: false, message: "Email id is not valid." });
@@ -158,26 +131,17 @@ const loginUser = async (req, res) => {
         .status(400)
         .send({ status: false, message: "Password is required." });
     }
-    if (!isValidPassword(password)) {
-      return res.status(400).send({
-        status: false,
-        message:
-          "Password length should be atleast 8 digits and enter atleast one uppercase, one lowercase and one special character",
-      });
-    }
 
     // Checking email from database to check it is existed or not.
     const getUserData = await userModel.findOne({ email: email });
-    if (!getUserData) {
+
+    // Comparing password
+    const comparePassword = await bcrypt.compare(password, getUserData.password);
+
+    if (!getUserData || !comparePassword) {
       return res
         .status(401)
-        .send({ status: false, msg: "Invalid credentials." });
-    }
-
-    // Decrypting a password
-    const ps = bcrypt.compareSync(password, getUserData.password);
-    if (ps == false) {
-      return res.status(401).send({ status: false, msg: "Invalid credentials." });
+        .send({ status: false, msg: "Email id or Password does not match" });
     }
 
     // Generating a JWT token
@@ -197,7 +161,7 @@ const loginUser = async (req, res) => {
       subject: "Login Alert", // Subject line
       text: "You are successfully loggedin.", // plain text body
     };
-    if (getUserData && ps && token) {
+    if (getUserData && comparePassword && token) {
       // Sending email
       const info = transporter.sendMail(option, (err, success) => {
         if (err) {
